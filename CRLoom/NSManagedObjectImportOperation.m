@@ -86,6 +86,10 @@ SEL NSManagedObjectImportSelector() {
 }
 
 - (void)main {
+    if ([self interruptIfNeeded]) {
+        return;
+    }
+    
     __block NSManagedObjectImportOperation *blockSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
         NSError *error = nil;
@@ -99,6 +103,8 @@ SEL NSManagedObjectImportSelector() {
     [self.moc performBlockAndWait:^{
         [blockSelf import];
     }];
+    
+    [self interruptIfNeeded];
 }
 
 - (void)import {
@@ -115,6 +121,20 @@ SEL NSManagedObjectImportSelector() {
     } else {
         NSAssert(NO, @"The object of type %@ supplied to NSManagedObjectImportOperation doesn't respond to %@", NSStringFromClass(self.targetClass), NSStringFromSelector(importSelector));
     }
+}
+
+/**
+ *  Interrupts and cancels the import operation, if `self.moc` has been removed. 
+ *  Unlike the `cancel` method, `interruptIfNeeded` `nil`s the `completionBlock`.
+ *  Returns `YES` if the operation was interrupted, otherwise returns `NO`.
+ */
+- (BOOL)interruptIfNeeded {
+    if (!self.moc) {
+        self.completionBlock = nil;
+        [self cancel];
+        return YES;
+    }
+    return NO;
 }
 
 @end
