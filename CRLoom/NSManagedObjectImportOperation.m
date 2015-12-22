@@ -124,12 +124,12 @@ SEL NSManagedObjectImportSelector() {
 }
 
 /**
- *  Interrupts and cancels the import operation, if `self.moc` has been removed. 
+ *  Interrupts and cancels the import operation, if `[CRLoom mainThreadContext]` has been removed. 
  *  Unlike the `cancel` method, `interruptIfNeeded` `nil`s the `completionBlock`.
  *  Returns `YES` if the operation was interrupted, otherwise returns `NO`.
  */
 - (BOOL)interruptIfNeeded {
-    if (!self.moc) {
+    if (![CRLoom mainThreadContext]) {
         self.completionBlock = nil;
         [self cancel];
         return YES;
